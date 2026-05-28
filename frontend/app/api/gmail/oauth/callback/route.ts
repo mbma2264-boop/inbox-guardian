@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-function getBackendBaseUrl(requestUrl: string) {
+function getBackendBaseUrl(requestUrl: string): { backendBaseUrl: string } | { error: string } {
   const requestOrigin = new URL(requestUrl).origin;
   const configured = (process.env.BACKEND_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '').trim();
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   if ('error' in backend) {
     const dashboardUrl = new URL('/dashboard', currentUrl.origin);
     dashboardUrl.searchParams.set('gmail', 'error');
-    dashboardUrl.searchParams.set('message', backend.error);
+    dashboardUrl.searchParams.set('message', backend.error || 'gmail_connect_failed');
     return NextResponse.redirect(dashboardUrl, 302);
   }
 
