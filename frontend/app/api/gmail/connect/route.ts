@@ -11,16 +11,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthenticated.' }, { status: 401 });
   }
 
-  const missing = getMissingGmailEnv();
-  if (missing.length > 0) {
-    return NextResponse.json(
-      { error: `Missing Gmail environment variable(s): ${missing.join(', ')}.` },
-      { status: 500 },
-    );
-  }
+  try {
+    const missing = getMissingGmailEnv();
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: `Missing Gmail environment variable(s): ${missing.join(', ')}.` },
+        { status: 500 },
+      );
+    }
 
-  const url = new URL(request.url);
-  const returnTo = url.searchParams.get('return_to') || `${url.origin}/dashboard`;
-  const authorizationUrl = await createGoogleAuthorizationUrl(url.origin, returnTo);
-  return NextResponse.json({ authorizationUrl, note: 'Opening Google consent screen.' });
+    const url = new URL(request.url);
+    const returnTo = url.searchParams.get('return_to') || `${url.origin}/dashboard`;
+    const authorizationUrl = await createGoogleAuthorizationUrl(url.origin, returnTo);
+    return NextResponse.json({ authorizationUrl, note: 'Opening Google consent screen.' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to create Google authorization URL.';
+    return NextResponse.json({ error: `Gmail connect request failed: ${message}` }, { status: 500 });
+  }
 }
